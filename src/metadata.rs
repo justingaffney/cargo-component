@@ -18,7 +18,7 @@ use serde::{
 use serde_json::from_value;
 use url::Url;
 use wasm_pkg_client::PackageRef;
-use wit_bindgen_rust::Opts;
+use wit_bindgen_rust::Opts as BindgenOptions;
 
 /// The default directory to look for a target WIT file.
 pub const DEFAULT_WIT_DIR: &str = "wit";
@@ -228,11 +228,22 @@ pub struct ComponentSection {
     /// The registries to use for the component.
     pub registries: HashMap<String, Url>,
     /// The configuration for bindings generation.
-    pub bindings: Opts,
+    #[serde(default = "get_default_bindgen_options")]
+    pub bindings: BindgenOptions,
     /// Whether to use the built-in `wasi:http/proxy` adapter for the component.
     ///
     /// This should only be `true` when `adapter` is None.
     pub proxy: bool,
+}
+
+pub fn get_default_bindgen_options() -> BindgenOptions {
+    let mut options = BindgenOptions::default();
+
+    options.format = true;
+    options.generate_all = true;
+    options.std_feature = false;
+
+    options
 }
 
 /// Represents cargo metadata for a WebAssembly component.

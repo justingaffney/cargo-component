@@ -12,6 +12,7 @@ use indexmap::{IndexMap, IndexSet};
 use semver::Version;
 use wasm_pkg_client::PackageRef;
 use wit_bindgen_core::Files;
+use wit_bindgen_rust::Opts;
 use wit_component::DecodedWasm;
 use wit_parser::{
     Interface, Package, PackageName, Resolve, Type, TypeDefKind, TypeOwner, UnresolvedPackageGroup,
@@ -91,19 +92,7 @@ impl<'a> BindingsGenerator<'a> {
         }
     }
 
-    /// Generates the bindings source for a package.
-    pub fn generate(self) -> Result<String> {
-        let mut opts = self.resolution.metadata.section.bindings.clone();
-
-        // TODO Thsese were the default values on the old `Bindings` struct in this crate,
-        // but they are not the default values in `wit-bindgen-rust::Opts`. Should these still
-        // be the default values here? And if so how can it be determined whether the user
-        // intentionally set them to false or not?
-        // ```
-        // opts.format = true;
-        // opts.generate_all = true;
-        // ```
-
+    fn apply_option_overrides(opts: &mut Opts) {
         // We use pregenerated bindings, rather than the `generate!` macro
         // from the `wit-bindgen` crate, so instead of getting the runtime
         // from the default path of `wit_bindgen::rt`, which is a re-export
@@ -111,7 +100,14 @@ impl<'a> BindingsGenerator<'a> {
         // crate directly.
         opts.runtime_path = Some("wit_bindgen_rt".to_string());
         opts.bitflags_path = None;
+    }
 
+    /// Generates the bindings source for a package.
+    pub fn generate(self) -> Result<String> {
+        let mut opts = self.resolution.metadata.section.bindings.clone();
+
+        Self::apply_option_overrides(&mut opts);
+        
         let mut files = Files::default();
         opts.build()
             .generate(&self.resolve, self.world, &mut files)
