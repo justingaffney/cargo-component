@@ -12,17 +12,13 @@ use indexmap::{IndexMap, IndexSet};
 use semver::Version;
 use wasm_pkg_client::PackageRef;
 use wit_bindgen_core::Files;
-use wit_bindgen_rust::{Opts, WithOption};
 use wit_component::DecodedWasm;
 use wit_parser::{
     Interface, Package, PackageName, Resolve, Type, TypeDefKind, TypeOwner, UnresolvedPackageGroup,
     World, WorldId, WorldItem, WorldKey,
 };
 
-use crate::{
-    metadata::Ownership,
-    registry::PackageDependencyResolution,
-};
+use crate::registry::PackageDependencyResolution;
 
 // Used to format `unlocked-dep` import names for dependencies on
 // other components.
@@ -97,49 +93,24 @@ impl<'a> BindingsGenerator<'a> {
 
     /// Generates the bindings source for a package.
     pub fn generate(self) -> Result<String> {
-        let settings = &self.resolution.metadata.section.bindings;
-        let opts = Opts {
-            format: settings.format,
-            ownership: match settings.ownership {
-                Ownership::Owning => wit_bindgen_rust::Ownership::Owning,
-                Ownership::Borrowing => wit_bindgen_rust::Ownership::Borrowing {
-                    duplicate_if_necessary: false,
-                },
-                Ownership::BorrowingDuplicateIfNecessary => {
-                    wit_bindgen_rust::Ownership::Borrowing {
-                        duplicate_if_necessary: true,
-                    }
-                }
-            },
-            additional_derive_attributes: settings.derives.clone(),
-            additional_derive_ignore: Vec::new(),
-            std_feature: settings.std_feature,
-            // We use pregenerated bindings, rather than the `generate!` macro
-            // from the `wit-bindgen` crate, so instead of getting the runtime
-            // from the default path of `wit_bindgen::rt`, which is a re-export
-            // of the `wit-bindgen-rt` API, we just use the `wit-bindgen-rt`
-            // crate directly.
-            runtime_path: Some("wit_bindgen_rt".to_string()),
-            bitflags_path: None,
-            raw_strings: settings.raw_strings,
-            skip: settings.skip.clone(),
-            stubs: settings.stubs,
-            export_prefix: settings.export_prefix.clone(),
-            with: settings
-                .with
-                .iter()
-                .map(|(key, value)| (key.clone(), WithOption::Path(value.clone())))
-                .collect(),
-            generate_all: settings.generate_all,
-            type_section_suffix: settings.type_section_suffix.clone(),
-            disable_run_ctors_once_workaround: settings.disable_run_ctors_once_workaround,
-            default_bindings_module: settings.default_bindings_module.clone(),
-            export_macro_name: settings.export_macro_name.clone(),
-            pub_export_macro: settings.pub_export_macro,
-            generate_unused_types: settings.generate_unused_types,
-            disable_custom_section_link_helpers: settings.disable_custom_section_link_helpers,
-            async_: settings.async_.clone(),
-        };
+        let mut opts = self.resolution.metadata.section.bindings.clone();
+        
+        // TODO Thsese were the default values on the old `Bindings` struct in this crate,
+        // but they are not the default values in `wit-bindgen-rust::Opts`. Should these still
+        // be the default values here? And if so how can it be determined whether the user
+        // intentionally set them to false or not?
+        // ```
+        // opts.format = true;
+        // opts.generate_all = true;
+        // ```
+
+        // We use pregenerated bindings, rather than the `generate!` macro
+        // from the `wit-bindgen` crate, so instead of getting the runtime
+        // from the default path of `wit_bindgen::rt`, which is a re-export
+        // of the `wit-bindgen-rt` API, we just use the `wit-bindgen-rt`
+        // crate directly.
+        opts.runtime_path = Some("wit_bindgen_rt".to_string());
+        opts.bitflags_path = None;
 
         let mut files = Files::default();
         opts.build()
