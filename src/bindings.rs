@@ -94,7 +94,7 @@ impl<'a> BindingsGenerator<'a> {
     /// Generates the bindings source for a package.
     pub fn generate(self) -> Result<String> {
         let mut opts = self.resolution.metadata.section.bindings.clone();
-        
+
         // TODO Thsese were the default values on the old `Bindings` struct in this crate,
         // but they are not the default values in `wit-bindgen-rust::Opts`. Should these still
         // be the default values here? And if so how can it be determined whether the user

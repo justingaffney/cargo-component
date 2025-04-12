@@ -1030,42 +1030,43 @@ fn add_component_metadata(
     git: Option<&GitMetadata>,
     wasm: &[u8],
 ) -> Result<Vec<u8>> {
-    let metadata = wasm_metadata::AddMetadata {
-        name: Some(package.name.clone()),
-        language: vec![("Rust".to_string(), "".to_string())],
-        processed_by: vec![(
-            env!("CARGO_PKG_NAME").to_string(),
-            option_env!("CARGO_VERSION_INFO")
-                .unwrap_or(env!("CARGO_PKG_VERSION"))
-                .to_string(),
-        )],
-        sdk: vec![],
-        authors: match package.authors.len() {
-            0 => None,
-            _ => Some(wasm_metadata::Authors::new(package.authors.join(","))),
-        },
-        description: package
-            .description
-            .as_ref()
-            .map(|d| wasm_metadata::Description::new(d.clone())),
-        licenses: package
-            .license
-            .as_ref()
-            .map(|s| wasm_metadata::Licenses::new(&s))
-            .transpose()?,
-        source: package
-            .repository
-            .as_ref()
-            .map(|s| wasm_metadata::Source::new(s.to_string().as_str()))
-            .transpose()?,
-        homepage: package
-            .homepage
-            .as_ref()
-            .map(|s| wasm_metadata::Homepage::new(s.to_string().as_str()))
-            .transpose()?,
-        revision: git.map(|git| wasm_metadata::Revision::new(git.commit().to_string())),
-        version: Some(wasm_metadata::Version::new(package.version.to_string())),
+    let mut metadata = wasm_metadata::AddMetadata::default();
+
+    metadata.name = Some(package.name.clone());
+    metadata.language = vec![("Rust".to_string(), "".to_string())];
+    metadata.processed_by = vec![(
+        env!("CARGO_PKG_NAME").to_string(),
+        option_env!("CARGO_VERSION_INFO")
+            .unwrap_or(env!("CARGO_PKG_VERSION"))
+            .to_string(),
+    )];
+    metadata.sdk = vec![];
+    metadata.authors = match package.authors.len() {
+        0 => None,
+        _ => Some(wasm_metadata::Authors::new(package.authors.join(","))),
     };
+    metadata.description = package
+        .description
+        .as_ref()
+        .map(|d| wasm_metadata::Description::new(d.clone()));
+    metadata.licenses = package
+        .license
+        .as_ref()
+        .map(|s| wasm_metadata::Licenses::new(&s))
+        .transpose()?;
+    metadata.source = package
+        .repository
+        .as_ref()
+        .map(|s| wasm_metadata::Source::new(s.to_string().as_str()))
+        .transpose()?;
+    metadata.homepage = package
+        .homepage
+        .as_ref()
+        .map(|s| wasm_metadata::Homepage::new(s.to_string().as_str()))
+        .transpose()?;
+    metadata.revision = git.map(|git| wasm_metadata::Revision::new(git.commit().to_string()));
+    metadata.version = Some(wasm_metadata::Version::new(package.version.to_string()));
+
     metadata.to_wasm(wasm)
 }
 
