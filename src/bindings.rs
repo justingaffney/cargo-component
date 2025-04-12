@@ -20,7 +20,7 @@ use wit_parser::{
 };
 
 use crate::{
-    metadata::{AsyncConfig, Ownership},
+    metadata::Ownership,
     registry::PackageDependencyResolution,
 };
 
@@ -138,14 +138,7 @@ impl<'a> BindingsGenerator<'a> {
             pub_export_macro: settings.pub_export_macro,
             generate_unused_types: settings.generate_unused_types,
             disable_custom_section_link_helpers: settings.disable_custom_section_link_helpers,
-            async_: match &settings.async_ {
-                AsyncConfig::None => wit_bindgen_rust::AsyncConfig::None,
-                AsyncConfig::Some { imports, exports } => wit_bindgen_rust::AsyncConfig::Some {
-                    imports: imports.clone(),
-                    exports: exports.clone(),
-                },
-                AsyncConfig::All => wit_bindgen_rust::AsyncConfig::All,
-            },
+            async_: settings.async_.clone(),
         };
 
         let mut files = Files::default();

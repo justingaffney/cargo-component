@@ -18,6 +18,7 @@ use serde::{
 use serde_json::from_value;
 use url::Url;
 use wasm_pkg_client::PackageRef;
+use wit_bindgen_rust::AsyncConfig;
 
 /// The default directory to look for a target WIT file.
 pub const DEFAULT_WIT_DIR: &str = "wit";
@@ -54,18 +55,6 @@ impl FromStr for Ownership {
             )),
         }
     }
-}
-
-#[derive(Default, Debug, Clone, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum AsyncConfig {
-    #[default]
-    None,
-    Some {
-        imports: Vec<String>,
-        exports: Vec<String>,
-    },
-    All,
 }
 
 /// Configuration for bindings generation.
